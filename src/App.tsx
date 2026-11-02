@@ -166,7 +166,7 @@ function Shell({ privateAvailable }: { privateAvailable: boolean }) {
         {route.page === "atlas" && <AtlasPage route={route} />}
         {route.page === "learn" && <Learn />}
         {route.page === "practice" && <Practice />}
-        {route.page === "poetry" && <Poetry id={route.id} learn={route.learn} poem={route.poem} />}
+        {route.page === "poetry" && <Poetry route={route} />}
         {route.page === "me" && <Me privateAvailable={privateAvailable} />}
         {route.page === "about" && <About />}
       </main>
