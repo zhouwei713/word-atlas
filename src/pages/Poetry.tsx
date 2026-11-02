@@ -1,7 +1,8 @@
-import { Bookmark, BookmarkCheck, ChevronLeft, ChevronRight, Grid3x3, List, Search } from "lucide-react";
+import { Bookmark, BookmarkCheck, ChevronLeft, ChevronRight, Grid3x3, List, Search, Sparkles } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { go, type Route } from "../lib/router";
 import { PoemSpeak } from "../poetry/PoemSpeak";
+import { PoetryGalaxy } from "../poetry/PoetryGalaxy";
 import { readAloud } from "../poetry/speech";
 import { RATE, speechText } from "../poetry/voice";
 import { PoetryContext, usePoem, usePoetry, usePoetryLoader } from "../poetry/context";
@@ -13,11 +14,12 @@ import { newToday } from "../poetry/quiz";
 import { Ring } from "../ui/Ring";
 import type { Poem } from "../poetry/types";
 
-type View = "grid" | "list";
+type View = "grid" | "list" | "galaxy";
 const VIEW_KEY = "word-atlas:poetry-view";
 function readView(): View {
   try {
-    return localStorage.getItem(VIEW_KEY) === "list" ? "list" : "grid";
+    const v = localStorage.getItem(VIEW_KEY);
+    return v === "list" || v === "galaxy" ? v : "grid";
   } catch {
     return "grid";
   }
@@ -54,7 +56,9 @@ export function Poetry({ route }: { route: Extract<Route, { page: "poetry" }> })
       </div>
     );
   return (
-    <PoetryContext.Provider value={atlas}>{route.learn ? <PoetryLearn poem={route.poem} /> : route.id ? <PoemPage id={route.id} /> : <PoemList route={route} />}</PoetryContext.Provider>
+    <PoetryContext.Provider value={atlas}>
+      {route.learn ? <PoetryLearn poem={route.poem} /> : route.id ? <PoemPage id={route.id} /> : <PoemList route={route} />}
+    </PoetryContext.Provider>
   );
 }
 
@@ -68,7 +72,7 @@ function PoemList({ route }: { route: Extract<Route, { page: "poetry" }> }) {
 
   // Filters live in the URL so a view can be shared or returned to with the back button.
   const status: Status = isStatus(route.status) ? route.status : "all";
-  const view: View = route.view === "list" ? "list" : route.view === "grid" ? "grid" : readView();
+  const view: View = route.view === "list" || route.view === "grid" || route.view === "galaxy" ? route.view : readView();
   const [q, setQ] = useState(route.q ?? "");
   useEffect(() => setQ(route.q ?? ""), [route.q]);
   const update = (patch: Partial<Extract<Route, { page: "poetry" }>>) => go({ ...route, ...patch }, null, true);
@@ -95,6 +99,11 @@ function PoemList({ route }: { route: Extract<Route, { page: "poetry" }> }) {
     [atlas, q, route.form, route.stage, route.theme, status, progress, bookmarks],
   );
   const learned = [...progress.values()].filter((v) => v.started > 0).length;
+  // In the star map the search flies to the first match instead of filtering.
+  const focus = useMemo(() => {
+    const query = q.trim();
+    return query ? atlas.poems.find((p) => p.title.includes(query) || p.author.includes(query))?.id : undefined;
+  }, [atlas, q]);
 
   // Today's plan from the index alone: due cards, plus unseen poems up to the daily limit.
   const plan = useMemo(() => {
@@ -106,7 +115,7 @@ function PoemList({ route }: { route: Extract<Route, { page: "poetry" }> }) {
   }, [atlas, progress, progressAll, dailyNew]);
 
   return (
-    <div className="page poetry">
+    <div className={`page poetry ${view === "galaxy" ? "is-galaxy" : ""}`}>
       <header className="page-head">
         <p className="eyebrow">诗词图鉴 · {atlas.count} 首唐诗</p>
         <h1 className="display">读一首诗，记一首诗。</h1>
@@ -148,14 +157,16 @@ function PoemList({ route }: { route: Extract<Route, { page: "poetry" }> }) {
             aria-label="搜索题目或诗人"
           />
         </label>
-        <select value={route.theme ?? ""} onChange={(e) => update({ theme: e.target.value || undefined })} aria-label="题材">
-          <option value="">全部题材</option>
-          {themeOptions.map(([t, c]) => (
-            <option key={t} value={atlas.themes[t]}>
-              {atlas.themes[t]}（{c}）
-            </option>
-          ))}
-        </select>
+        {view !== "galaxy" && (
+          <select value={route.theme ?? ""} onChange={(e) => update({ theme: e.target.value || undefined })} aria-label="题材">
+            <option value="">全部题材</option>
+            {themeOptions.map(([t, c]) => (
+              <option key={t} value={atlas.themes[t]}>
+                {atlas.themes[t]}（{c}）
+              </option>
+            ))}
+          </select>
+        )}
         <div className="segmented" role="group" aria-label="视图">
           <button className={view === "grid" ? "is-on" : ""} onClick={() => setView("grid")} aria-label="卡片视图" aria-pressed={view === "grid"}>
             <Grid3x3 size={17} />
@@ -163,67 +174,80 @@ function PoemList({ route }: { route: Extract<Route, { page: "poetry" }> }) {
           <button className={view === "list" ? "is-on" : ""} onClick={() => setView("list")} aria-label="列表视图" aria-pressed={view === "list"}>
             <List size={17} />
           </button>
+          <button className={view === "galaxy" ? "is-on" : ""} onClick={() => setView("galaxy")} aria-label="星图视图" aria-pressed={view === "galaxy"}>
+            <Sparkles size={17} />
+          </button>
         </div>
       </div>
-      <div className="segmented segmented-wide" role="group" aria-label="学习状态">
-        {STATUS.map(([k, label]) => (
-          <button key={k} className={status === k ? "is-on" : ""} onClick={() => update({ status: k === "all" ? undefined : k })} aria-pressed={status === k}>
-            {label}
-            {k === "saved" ? ` ${bookmarks.length}` : ""}
-          </button>
-        ))}
-      </div>
-      <div className="segmented segmented-wide" role="group" aria-label="体裁">
-        <button className={!route.form ? "is-on" : ""} onClick={() => update({ form: undefined })} aria-pressed={!route.form}>
-          全部体裁
-        </button>
-        {usedForms.map((f) => (
-          <button key={f} className={route.form === f ? "is-on" : ""} onClick={() => update({ form: f })} aria-pressed={route.form === f}>
-            {f}
-          </button>
-        ))}
-      </div>
-      <div className="segmented segmented-wide" role="group" aria-label="学段">
-        <button className={!route.stage ? "is-on" : ""} onClick={() => update({ stage: undefined })} aria-pressed={!route.stage}>
-          全部学段
-        </button>
-        {stages.map((s) => (
-          <button key={s} className={route.stage === s ? "is-on" : ""} onClick={() => update({ stage: s })} aria-pressed={route.stage === s}>
-            {s}
-          </button>
-        ))}
-      </div>
+      {view !== "galaxy" && (
+        <>
+          <div className="segmented segmented-wide" role="group" aria-label="学习状态">
+            {STATUS.map(([k, label]) => (
+              <button key={k} className={status === k ? "is-on" : ""} onClick={() => update({ status: k === "all" ? undefined : k })} aria-pressed={status === k}>
+                {label}
+                {k === "saved" ? ` ${bookmarks.length}` : ""}
+              </button>
+            ))}
+          </div>
+          <div className="segmented segmented-wide" role="group" aria-label="体裁">
+            <button className={!route.form ? "is-on" : ""} onClick={() => update({ form: undefined })} aria-pressed={!route.form}>
+              全部体裁
+            </button>
+            {usedForms.map((f) => (
+              <button key={f} className={route.form === f ? "is-on" : ""} onClick={() => update({ form: f })} aria-pressed={route.form === f}>
+                {f}
+              </button>
+            ))}
+          </div>
+          <div className="segmented segmented-wide" role="group" aria-label="学段">
+            <button className={!route.stage ? "is-on" : ""} onClick={() => update({ stage: undefined })} aria-pressed={!route.stage}>
+              全部学段
+            </button>
+            {stages.map((s) => (
+              <button key={s} className={route.stage === s ? "is-on" : ""} onClick={() => update({ stage: s })} aria-pressed={route.stage === s}>
+                {s}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
 
-      <p className="poem-count" aria-live="polite">
-        {shown.length === atlas.count ? `共 ${atlas.count} 首` : `${shown.length} / ${atlas.count} 首`}
-      </p>
-      {shown.length === 0 ? (
-        <p className="poem-empty">{status === "saved" && bookmarks.length === 0 ? "还没有收藏。在诗词页点右上角的书签即可收藏。" : "没有符合条件的诗。换个筛选条件试试。"}</p>
+      {view === "galaxy" ? (
+        <PoetryGalaxy focus={focus} />
       ) : (
-        <ul className={view === "grid" ? "poem-list" : "poem-rows"}>
-          {shown.map((p) => {
-            const total = coupletCount(p);
-            const v = progress.get(p.id);
-            const state = stateOf(p, v);
-            const label = state === "mastered" ? "已掌握" : state === "learning" ? `掌握 ${v?.mastered ?? 0}/${total} 联` : "未学";
-            const mark = bookmarks.includes(p.id) && <BookmarkCheck className="poem-mark" size={16} aria-label="已收藏" />;
-            return (
-              <li key={p.id}>
-                <a href={poemHref(p.id)} className={`poem-item is-${state}`}>
-                  {view === "grid" && <Ring value={total ? (v?.mastered ?? 0) / total : 0} size={40} stroke={4} tone={state === "mastered" ? "sage" : "ochre"} />}
-                  <span className="poem-item-main">
-                    <b>{p.title}</b>
-                    <span>
-                      {p.author} · {atlas.forms[p.form]}
-                    </span>
-                  </span>
-                  <small>{label}</small>
-                  {mark}
-                </a>
-              </li>
-            );
-          })}
-        </ul>
+        <>
+          <p className="poem-count" aria-live="polite">
+            {shown.length === atlas.count ? `共 ${atlas.count} 首` : `${shown.length} / ${atlas.count} 首`}
+          </p>
+          {shown.length === 0 ? (
+            <p className="poem-empty">{status === "saved" && bookmarks.length === 0 ? "还没有收藏。在诗词页点右上角的书签即可收藏。" : "没有符合条件的诗。换个筛选条件试试。"}</p>
+          ) : (
+            <ul className={view === "grid" ? "poem-list" : "poem-rows"}>
+              {shown.map((p) => {
+                const total = coupletCount(p);
+                const v = progress.get(p.id);
+                const state = stateOf(p, v);
+                const label = state === "mastered" ? "已掌握" : state === "learning" ? `掌握 ${v?.mastered ?? 0}/${total} 联` : "未学";
+                const mark = bookmarks.includes(p.id) && <BookmarkCheck className="poem-mark" size={16} aria-label="已收藏" />;
+                return (
+                  <li key={p.id}>
+                    <a href={poemHref(p.id)} className={`poem-item is-${state}`}>
+                      {view === "grid" && <Ring value={total ? (v?.mastered ?? 0) / total : 0} size={40} stroke={4} tone={state === "mastered" ? "sage" : "ochre"} />}
+                      <span className="poem-item-main">
+                        <b>{p.title}</b>
+                        <span>
+                          {p.author} · {atlas.forms[p.form]}
+                        </span>
+                      </span>
+                      <small>{label}</small>
+                      {mark}
+                    </a>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </>
       )}
     </div>
   );
@@ -296,7 +320,13 @@ function PoemPage({ id }: { id: string }) {
 function BookmarkButton({ id }: { id: string }) {
   const saved = usePoetryStore((s) => s.progress.bookmarks.includes(id));
   return (
-    <button className={`icon-btn ${saved ? "is-on" : ""}`} onClick={() => togglePoemBookmark(id)} aria-pressed={saved} aria-label={saved ? "取消收藏" : "收藏"} title={saved ? "取消收藏" : "收藏"}>
+    <button
+      className={`icon-btn ${saved ? "is-on" : ""}`}
+      onClick={() => togglePoemBookmark(id)}
+      aria-pressed={saved}
+      aria-label={saved ? "取消收藏" : "收藏"}
+      title={saved ? "取消收藏" : "收藏"}
+    >
       {saved ? <BookmarkCheck size={19} /> : <Bookmark size={19} />}
     </button>
   );
@@ -329,7 +359,15 @@ function PoemBody({ poem }: { poem: Poem }) {
       </header>
       <div className={`poem-lines ${pinyin ? "has-py" : ""}`} lang="zh-Hans">
         {poem.lines.map((l, i) => (
-          <p key={i} className="poem-line" role="button" tabIndex={0} title="点一下朗读这一句" onClick={() => void readAloud(l.zh, slow ? RATE.slow : RATE.normal)} onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), void readAloud(l.zh, slow ? RATE.slow : RATE.normal))}>
+          <p
+            key={i}
+            className="poem-line"
+            role="button"
+            tabIndex={0}
+            title="点一下朗读这一句"
+            onClick={() => void readAloud(l.zh, slow ? RATE.slow : RATE.normal)}
+            onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), void readAloud(l.zh, slow ? RATE.slow : RATE.normal))}
+          >
             {[...l.zh].map((ch, j) => (
               <span key={j} className={l.py[j] ? "ch" : "ch ch-punct"}>
                 {pinyin && <small aria-hidden>{l.py[j]}</small>}

@@ -4514,3 +4514,25 @@ a:hover .mark-needle,
 .poem-intro .speak {
   margin: 8px auto 0;
 }
+.poem-tip {
+  max-width: 260px;
+}
+.poem-tip span {
+  display: grid;
+  gap: 2px;
+  text-align: left;
+}
+.poem-tip b {
+  font-family: var(--serif);
+}
+.poetry.is-galaxy .poem-plan {
+  display: none;
+}
+@media (max-width: 759px) {
+  .poetry.is-galaxy .page-head .lede {
+    display: none;
+  }
+  .poetry.is-galaxy .page-head .display {
+    font-size: 26px;
+  }
+}
