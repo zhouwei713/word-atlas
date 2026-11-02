@@ -43,7 +43,10 @@ TEXT_FIXES = [
     ("多彩撷", "多采撷"),
 ]
 # Tags that describe the era or the collection, not a theme.
-NOT_THEMES = {"唐诗三百首", "隋・唐・五代", "唐", "唐代"}
+NOT_THEMES = {"唐诗三百首", "隋・唐・五代", "唐", "唐代", "地名", "带有地名"}
+# Textbook grade tags (三年级上册, 七年级上册(课内) ...) are dropped; the school stage tags
+# 小学古诗 / 初中古诗 / 高中古诗 stay as themes and the app shows them as a separate filter.
+GRADE_TAG = re.compile(r"[一二三四五六七八九]年级|册")
 
 t2s = OpenCC("t2s").convert
 
@@ -77,7 +80,7 @@ def form_of(tags):
 
 def themes_of(tags):
     tags = [t2s(t) for t in tags]
-    keep = [t for t in dict.fromkeys(tags) if t not in NOT_THEMES and t not in FORMS]
+    keep = [t for t in dict.fromkeys(tags) if t not in NOT_THEMES and t not in FORMS and not GRADE_TAG.search(t)]
     # 咏物 / 咏物诗 and 秋 / 秋天 name the same theme: keep the shorter one.
     return [t for t in keep if not (t[-1] in "诗天" and t[:-1] in keep)]
 

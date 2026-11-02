@@ -678,7 +678,8 @@ code {
   right: 0;
   bottom: 0;
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
   padding: 6px 8px calc(6px + env(safe-area-inset-bottom));
   background: color-mix(in oklab, var(--paper) 86%, transparent);
   backdrop-filter: saturate(1.4) blur(18px);
@@ -4149,14 +4150,18 @@ a:hover .mark-needle,
   color: var(--ink-3);
   font-size: 0.85rem;
 }
-.poem-dot {
+.poem-list small {
+  color: var(--ink-3);
+  font-size: 0.8rem;
+}
+.poem-list small.is-done {
+  color: var(--sage-ink);
+}
+.poem-mark {
   position: absolute;
   top: 14px;
   right: 14px;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--ochre);
+  color: var(--ochre);
 }
 .poem {
   max-width: 640px;
@@ -4179,10 +4184,28 @@ a:hover .mark-needle,
 .poem-lines p {
   margin: 0;
 }
-.poem-lines rt {
+.poem-lines .ch {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 1.05em;
+  margin: 0 0.04em;
+  line-height: 1.2;
+  vertical-align: bottom;
+}
+.poem-lines.has-py .ch {
+  min-width: 1.6em;
+}
+.poem-lines.has-py .ch-punct {
+  min-width: 0.6em;
+}
+.poem-lines .ch small {
+  min-height: 1.2em;
   font-family: var(--sans);
   font-size: 0.5em;
+  line-height: 1.2;
   color: var(--ink-3);
+  white-space: nowrap;
 }
 .poem-tags,
 .poem-status {
@@ -4193,4 +4216,50 @@ a:hover .mark-needle,
   .poem-lines {
     font-size: 1.25rem;
   }
+}
+.poem-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 8px 0 12px;
+}
+.poem-filters .poem-search {
+  flex: 1 1 220px;
+  height: 44px;
+}
+.poem-filters select {
+  height: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  background: var(--card);
+  color: var(--ink);
+}
+.poetry .segmented {
+  margin-bottom: 10px;
+  overflow-x: auto;
+}
+.poem-empty {
+  margin: 32px 0;
+  color: var(--ink-3);
+  text-align: center;
+}
+.poem-bar,
+.poem-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.poem-nav {
+  justify-content: center;
+  gap: 16px;
+  margin: 32px 0;
+  color: var(--ink-3);
+  font-size: 0.9rem;
+}
+.poem-gist {
+  margin: 24px 0 8px;
+  text-align: left;
+  color: var(--ink-2);
+  line-height: 1.8;
 }
