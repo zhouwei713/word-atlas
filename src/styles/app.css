@@ -4120,3 +4120,77 @@ a:hover .mark-needle,
 .streak-panel .mini-stats div:first-child dd {
   color: var(--ochre);
 }
+
+/* Poetry */
+.poem-list {
+  list-style: none;
+  margin: 20px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+}
+.poem-list a {
+  position: relative;
+  display: grid;
+  gap: 2px;
+  padding: 14px 16px;
+  border-radius: var(--r);
+  background: var(--card);
+  box-shadow: var(--shadow-sm);
+  color: inherit;
+  text-decoration: none;
+}
+.poem-list b {
+  font-family: var(--serif);
+  font-size: 1.05rem;
+}
+.poem-list span {
+  color: var(--ink-3);
+  font-size: 0.85rem;
+}
+.poem-dot {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--ochre);
+}
+.poem {
+  max-width: 640px;
+  margin: 24px auto 0;
+  text-align: center;
+}
+.poem-toggle {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  color: var(--ink-3);
+  font-size: 0.9rem;
+}
+.poem-lines {
+  margin: 28px 0;
+  font-family: var(--serif);
+  font-size: 1.5rem;
+  line-height: 2.6;
+}
+.poem-lines p {
+  margin: 0;
+}
+.poem-lines rt {
+  font-family: var(--sans);
+  font-size: 0.5em;
+  color: var(--ink-3);
+}
+.poem-tags,
+.poem-status {
+  color: var(--ink-3);
+  font-size: 0.9rem;
+}
+@media (max-width: 480px) {
+  .poem-lines {
+    font-size: 1.25rem;
+  }
+}

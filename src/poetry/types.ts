@@ -1,0 +1,48 @@
+/** Compact row from poetry/index.json: [id, title, author, form, level, lines, themes]. */
+export type PoemRow = [string, string, string, number, number, number, number[]];
+
+export interface PoemLine {
+  zh: string;
+  /** One reading per character of `zh`; empty for punctuation. */
+  py: string[];
+}
+
+export interface Poem {
+  id: string;
+  title: string;
+  author: string;
+  dynasty: string;
+  form: string;
+  themes: string[];
+  level: number;
+  /** One sentence per line; consecutive pairs form a couplet. */
+  lines: PoemLine[];
+  /** Plain-language summary; empty when the source has none. */
+  gist: string;
+}
+
+export interface PoemRef {
+  id: string;
+  title: string;
+  author: string;
+  form: number;
+  level: number;
+  lines: number;
+  themes: number[];
+  /** Position in the learning path. */
+  order: number;
+}
+
+export interface PoetryAtlas {
+  id: string;
+  name: string;
+  count: number;
+  forms: string[];
+  levels: string[];
+  themes: string[];
+  poems: PoemRef[];
+  byId: Map<string, PoemRef>;
+  /** Loads a full poem; chunked like the word atlas. */
+  poem: (id: string) => Promise<Poem>;
+  peek: (id: string) => Poem | undefined;
+}

@@ -6,6 +6,7 @@ export type Route =
   | { page: "atlas"; topic?: string; level?: string; q?: string; view?: string }
   | { page: "learn" }
   | { page: "practice" }
+  | { page: "poetry"; id?: string }
   | { page: "me" }
   | { page: "about" };
 
@@ -25,6 +26,7 @@ function parse(hash: string): Location {
     route = { page: "atlas", topic: params.get("topic") || undefined, level: params.get("level") || undefined, q: params.get("q") || undefined, view: params.get("view") || undefined };
   else if (seg[0] === "learn") route = { page: "learn" };
   else if (seg[0] === "practice") route = { page: "practice" };
+  else if (seg[0] === "poetry") route = { page: "poetry", id: seg[1] ? decodeURIComponent(seg[1]) : undefined };
   else if (seg[0] === "me") route = { page: "me" };
   else if (seg[0] === "about") route = { page: "about" };
   else if (seg[0] === "w" && seg[1]) return { route: { page: "atlas" }, word: decodeURIComponent(seg[1]) };
@@ -41,7 +43,8 @@ export function href(route: Route, word?: string | null) {
   }
   if (word) params.set("w", word);
   const q = params.toString();
-  return `#/${route.page === "today" ? "" : route.page}${q ? `?${q}` : ""}`;
+  const path = route.page === "today" ? "" : route.page === "poetry" && route.id ? `poetry/${encodeURIComponent(route.id)}` : route.page;
+  return `#/${path}${q ? `?${q}` : ""}`;
 }
 
 let loc = parse(location.hash);
