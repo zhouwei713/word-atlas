@@ -8,7 +8,7 @@ import { RATE, speechText } from "../poetry/voice";
 import { PoetryContext, usePoem, usePoetry, usePoetryLoader } from "../poetry/context";
 import { PoetryLearn } from "./PoetryLearn";
 import { poemStatus } from "../poetry/couplets";
-import { coupletCount, filterPoems, isStatus, poemProgress, stateOf, STAGES, STATUS, type Status } from "../poetry/filter";
+import { coupletCount, filterPoems, isStatus, poemProgress, poemTexts, snippetOf, stateOf, STAGES, STATUS, type Status } from "../poetry/filter";
 import { poetryStore, togglePoemBookmark, usePoetryStore } from "../poetry/store";
 import { newToday } from "../poetry/quiz";
 import { Ring } from "../ui/Ring";
@@ -93,17 +93,29 @@ function PoemList({ route }: { route: Extract<Route, { page: "poetry" }> }) {
   }, [atlas]);
   const stages = useMemo(() => STAGES.filter((s) => atlas.themes.includes(s)), [atlas]);
 
+  // The index has titles and poets only; the first search loads every poem so lines can be searched too.
+  const [texts, setTexts] = useState<Map<string, string> | undefined>();
+  const searching = q.trim() !== "";
+  useEffect(() => {
+    if (!searching || texts) return;
+    let live = true;
+    atlas.all().then(
+      (poems) => live && setTexts(poemTexts(poems)),
+      () => null,
+    );
+    return () => {
+      live = false;
+    };
+  }, [atlas, searching, texts]);
+
   const progress = useMemo(() => poemProgress(cards), [cards]);
   const shown = useMemo(
-    () => filterPoems(atlas, { q, form: route.form, stage: route.stage, theme: route.theme, status }, progress, bookmarks),
-    [atlas, q, route.form, route.stage, route.theme, status, progress, bookmarks],
+    () => filterPoems(atlas, { q, form: route.form, stage: route.stage, theme: route.theme, level: route.level, status }, progress, bookmarks, texts),
+    [atlas, q, route.form, route.stage, route.theme, route.level, status, progress, bookmarks, texts],
   );
   const learned = [...progress.values()].filter((v) => v.started > 0).length;
   // In the star map the search flies to the first match instead of filtering.
-  const focus = useMemo(() => {
-    const query = q.trim();
-    return query ? atlas.poems.find((p) => p.title.includes(query) || p.author.includes(query))?.id : undefined;
-  }, [atlas, q]);
+  const focus = useMemo(() => (searching ? filterPoems(atlas, { q, status: "all" }, progress, [], texts)[0]?.id : undefined), [atlas, q, searching, progress, texts]);
 
   // Today's plan from the index alone: due cards, plus unseen poems up to the daily limit.
   const plan = useMemo(() => {
@@ -153,8 +165,8 @@ function PoemList({ route }: { route: Extract<Route, { page: "poetry" }> }) {
               setQ(e.target.value);
               update({ q: e.target.value || undefined });
             }}
-            placeholder="搜索题目或诗人"
-            aria-label="搜索题目或诗人"
+            placeholder="搜索题目、诗人或诗句"
+            aria-label="搜索题目、诗人或诗句"
           />
         </label>
         {view !== "galaxy" && (
@@ -209,6 +221,16 @@ function PoemList({ route }: { route: Extract<Route, { page: "poetry" }> }) {
               </button>
             ))}
           </div>
+          <div className="segmented segmented-wide" role="group" aria-label="难度">
+            <button className={!route.level ? "is-on" : ""} onClick={() => update({ level: undefined })} aria-pressed={!route.level}>
+              全部难度
+            </button>
+            {atlas.levels.map((l) => (
+              <button key={l} className={route.level === l ? "is-on" : ""} onClick={() => update({ level: l })} aria-pressed={route.level === l}>
+                {l}
+              </button>
+            ))}
+          </div>
         </>
       )}
 
@@ -236,8 +258,9 @@ function PoemList({ route }: { route: Extract<Route, { page: "poetry" }> }) {
                       <span className="poem-item-main">
                         <b>{p.title}</b>
                         <span>
-                          {p.author} · {atlas.forms[p.form]}
+                          {p.author} · {atlas.forms[p.form]} · {atlas.levels[p.level]}
                         </span>
+                        {searching && !p.title.includes(q.trim()) && !p.author.includes(q.trim()) && <Snippet id={p.id} q={q} />}
                       </span>
                       <small>{label}</small>
                       {mark}
@@ -332,7 +355,16 @@ function BookmarkButton({ id }: { id: string }) {
   );
 }
 
+/** The line of a poem that matched the search, shown under its title in the list. */
+function Snippet({ id, q }: { id: string; q: string }) {
+  const atlas = usePoetry();
+  const poem = atlas.peek(id);
+  const line = poem && snippetOf(poem.lines, q);
+  return line ? <em className="poem-snippet">{line}</em> : null;
+}
+
 function PoemBody({ poem }: { poem: Poem }) {
+  const atlas = usePoetry();
   const pinyin = usePoetryStore((s) => s.prefs.pinyin);
   const slow = usePoetryStore((s) => s.prefs.slow);
   const cards = usePoetryStore((s) => s.progress.cards);
@@ -343,7 +375,7 @@ function PoemBody({ poem }: { poem: Poem }) {
     <article className="poem">
       <header>
         <p className="eyebrow">
-          {poem.dynasty} · {poem.author} · {poem.form}
+          {poem.dynasty} · {poem.author} · {poem.form} · {atlas.levels[poem.level]}
           {stage ? ` · ${stage}` : ""}
         </p>
         <h1 className="display">{poem.title}</h1>

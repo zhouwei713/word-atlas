@@ -4536,3 +4536,12 @@ a:hover .mark-needle,
     font-size: 26px;
   }
 }
+.poem-snippet {
+  font-family: var(--serif);
+  font-style: normal;
+  font-size: 0.9rem;
+  color: var(--ink-2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

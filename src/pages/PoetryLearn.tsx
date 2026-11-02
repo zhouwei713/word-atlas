@@ -6,6 +6,7 @@ import { cue } from "../lib/sound";
 import { PoetryContext, usePoetry } from "../poetry/context";
 import { couplets, type Couplet } from "../poetry/couplets";
 import { PoemSpeak } from "../poetry/PoemSpeak";
+import { PoetryGalaxy } from "../poetry/PoetryGalaxy";
 import { speechText } from "../poetry/voice";
 import { answerOf, gradeFor, hanChars, makePool, parseCoupletId, sessionStats, type Pool, type PoetrySession, type PoetryStep } from "../poetry/quiz";
 import { advance, answer, endSession, startSession } from "../poetry/session";
@@ -298,6 +299,8 @@ function Summary({ session, pool }: { session: PoetrySession; pool: Pool }) {
     .filter(([, g]) => g === Rating.Again)
     .map(([id]) => id);
   const poems = useMemo(() => [...new Set(Object.keys(session.graded).map((id) => parseCoupletId(id).poemId))].map((id) => pool.byId.get(id)!), [session, pool]);
+  // Stable identity, so the star map lights these once rather than on every render.
+  const litIds = useMemo(() => poems.map((p) => p.id), [poems]);
   const minutes = Math.max(1, Math.round(((session.finished ?? Date.now()) - session.started) / 60000));
   const done = () => {
     endSession();
@@ -307,6 +310,12 @@ function Summary({ session, pool }: { session: PoetrySession; pool: Pool }) {
   return (
     <div className="learn summary">
       <div className="summary-card">
+        {poems.length > 0 && (
+          <div className="summary-sky">
+            <PoetryGalaxy mode="mini" highlight={litIds} ignite />
+            <p>这一程点亮了 {poems.length} 颗星</p>
+          </div>
+        )}
         <p className="eyebrow">这一程结束了</p>
         <h1 className="display">{stats.accuracy >= 90 ? "漂亮的一程。" : stats.accuracy >= 60 ? "稳稳向前。" : "错过的，会再相遇。"}</h1>
         <dl className="summary-stats">

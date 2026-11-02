@@ -1,7 +1,8 @@
-import { Crosshair, Minus, Plus, RotateCcw } from "lucide-react";
+import { Crosshair, Minus, Plus, RotateCcw, Share2 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { detectQuality, GalaxyEngine } from "../galaxy/engine";
 import { TOPIC_COLORS } from "../galaxy/layout";
+import { shareGalaxy, type GalaxyCopy } from "../galaxy/share";
 import { go } from "../lib/router";
 import { cue } from "../lib/sound";
 import { store } from "../store/store";
@@ -15,8 +16,29 @@ const reduced = () => typeof matchMedia !== "undefined" && matchMedia("(prefers-
 const clampDist = (d: number) => Math.max(0.35, Math.min(4.2, d));
 const sfx = () => store.get().settings.sfx;
 
-/** The poem atlas as a star map: one star per poem, arms by form, brighter as it is learned. */
-export function PoetryGalaxy({ focus }: { focus?: string | null }) {
+const POEM_COPY: GalaxyCopy = {
+  heading: "我的诗词星图",
+  detail: (total) => `共 ${total} 首唐诗 · 每学会一首，就点亮一颗`,
+  tag: "读一首诗，记一首诗",
+  file: "word-atlas-poetry-galaxy.png",
+};
+
+/**
+ * The poem atlas as a star map: one star per poem, arms by form, brighter as it is learned.
+ * `mini` is a small, non-interactive view; with `ignite` the `highlight` poems light up one by one.
+ */
+export function PoetryGalaxy({
+  mode = "full",
+  focus,
+  highlight,
+  ignite,
+}: {
+  mode?: "full" | "mini";
+  focus?: string | null;
+  /** Poems to show as gold stars (this session). */
+  highlight?: string[];
+  ignite?: boolean;
+}) {
   const atlas = usePoetry();
   const layout = useMemo(() => layoutPoems(atlas), [atlas]);
   const cards = usePoetryStore((s) => s.progress.cards);
@@ -26,14 +48,17 @@ export function PoetryGalaxy({ focus }: { focus?: string | null }) {
   const [hover, setHover] = useState<{ ref: PoemRef; x: number; y: number } | null>(null);
   const [fallback, setFallback] = useState(false);
   const progress = useMemo(() => poemProgress(cards), [cards]);
+  const highlightSet = useMemo(() => new Set(highlight ?? []), [highlight]);
 
   useEffect(() => {
     const cv = canvas.current;
     if (!cv) return;
-    const eng = new GalaxyEngine(cv, layout, { quality: detectQuality(), reducedMotion: reduced(), preserve: false, autoRotate: 0.025, distScale: 0.62 });
+    // The full view keeps its pixels so the share poster can copy them.
+    const eng = new GalaxyEngine(cv, layout, { quality: detectQuality(), reducedMotion: reduced(), preserve: mode === "full", autoRotate: mode === "mini" ? 0.06 : 0.025, distScale: 0.62 });
     engine.current = eng;
     setFallback(!eng.webgl);
     eng.resize();
+    if (mode === "mini") eng.cam.dist = eng.baseDist() * 1.1;
     const ro = new ResizeObserver(() => eng.resize());
     ro.observe(cv);
     // Only animate while visible.
@@ -63,17 +88,34 @@ export function PoetryGalaxy({ focus }: { focus?: string | null }) {
       eng.destroy();
       engine.current = null;
     };
-  }, [layout]);
+  }, [layout, mode]);
 
-  // Brightness follows learning state: dust, learning, mastered.
+  // Brightness follows learning state: dust, learning, mastered; highlighted poems are gold.
+  // In ignite mode the highlighted stars start dark and light up below.
   useEffect(() => {
     const states = new Float32Array(layout.n);
     atlas.poems.forEach((p, i) => {
       const s = stateOf(p, progress.get(p.id));
-      states[i] = s === "mastered" ? 2 : s === "learning" ? 1 : 0;
+      states[i] = highlightSet.has(p.id) ? (ignite ? 0 : 3) : s === "mastered" ? 2 : s === "learning" ? 1 : 0;
     });
     engine.current?.setStates(states);
-  }, [atlas, layout, progress]);
+  }, [atlas, layout, progress, highlightSet, ignite]);
+
+  useEffect(() => {
+    const eng = engine.current;
+    if (!eng || !ignite || !highlightSet.size) return;
+    const ids = [...highlightSet].filter((id) => layout.index.has(id));
+    eng.frameStars(ids.map((id) => layout.index.get(id)!));
+    eng.autoRotate = 0.02;
+    const on = sfx();
+    const timers = ids.map((id, k) =>
+      window.setTimeout(() => {
+        eng.setState(layout.index.get(id)!, 3);
+        if (on && k < 12) void cue("ignite");
+      }, 1400 + k * 260),
+    );
+    return () => timers.forEach(clearTimeout);
+  }, [ignite, highlightSet, layout]);
 
   useEffect(() => {
     if (!focus) return;
@@ -172,20 +214,28 @@ export function PoetryGalaxy({ focus }: { focus?: string | null }) {
   };
 
   useEffect(() => {
-    // Wheel zoom must not scroll the page while over the galaxy.
+    // Wheel zoom must not scroll the page while over the galaxy; the mini view lets the page scroll.
     const cv = canvas.current;
-    if (!cv) return;
+    if (!cv || mode !== "full") return;
     const stop = (e: WheelEvent) => {
       e.preventDefault();
       if (engine.current) engine.current.cam.dist = clampDist(engine.current.cam.dist * Math.exp(e.deltaY * 0.0012));
     };
     cv.addEventListener("wheel", stop, { passive: false });
     return () => cv.removeEventListener("wheel", stop);
-  }, []);
+  }, [mode]);
 
   const lit = useMemo(() => atlas.poems.reduce((n, p) => n + (progress.has(p.id) ? 1 : 0), 0), [atlas, progress]);
   const zoom = (k: number) => engine.current && (engine.current.cam.dist = clampDist(engine.current.cam.dist * k));
   const state = hover ? stateOf(hover.ref, progress.get(hover.ref.id)) : "new";
+
+  if (mode === "mini")
+    return (
+      <div className="galaxy galaxy-mini">
+        <canvas ref={canvas} aria-hidden="true" />
+        {fallback && <span className="galaxy-fallback" />}
+      </div>
+    );
 
   return (
     <div className="galaxy galaxy-full">
@@ -286,6 +336,9 @@ export function PoetryGalaxy({ focus }: { focus?: string | null }) {
           aria-label="飞到一颗已点亮的星"
         >
           <Crosshair size={17} />
+        </button>
+        <button className="icon-btn" onClick={() => canvas.current && shareGalaxy(canvas.current, lit, layout.n, POEM_COPY)} aria-label="分享我的诗词星图">
+          <Share2 size={17} />
         </button>
       </div>
       <p className="galaxy-hint">拖动旋转 · 滚动缩放 · 点击星星打开诗</p>

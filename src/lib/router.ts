@@ -6,7 +6,7 @@ export type Route =
   | { page: "atlas"; topic?: string; level?: string; q?: string; view?: string }
   | { page: "learn" }
   | { page: "practice" }
-  | { page: "poetry"; id?: string; learn?: boolean; poem?: string; q?: string; form?: string; stage?: string; theme?: string; status?: string; view?: string }
+  | { page: "poetry"; id?: string; learn?: boolean; poem?: string; q?: string; form?: string; stage?: string; theme?: string; level?: string; status?: string; view?: string }
   | { page: "me" }
   | { page: "about" };
 
@@ -35,6 +35,7 @@ function parse(hash: string): Location {
       form: params.get("form") || undefined,
       stage: params.get("stage") || undefined,
       theme: params.get("theme") || undefined,
+      level: params.get("level") || undefined,
       status: params.get("status") || undefined,
       view: params.get("view") || undefined,
     };
@@ -55,7 +56,7 @@ export function href(route: Route, word?: string | null) {
   if (word) params.set("w", word);
   if (route.page === "poetry" && route.learn && route.poem) params.set("p", route.poem);
   if (route.page === "poetry" && !route.learn && !route.id)
-    for (const k of ["q", "form", "stage", "theme", "status", "view"] as const) if (route[k]) params.set(k, route[k]!);
+    for (const k of ["q", "form", "stage", "theme", "level", "status", "view"] as const) if (route[k]) params.set(k, route[k]!);
   const q = params.toString();
   const path = route.page === "today" ? "" : route.page === "poetry" && route.learn ? "poetry/learn" : route.page === "poetry" && route.id ? `poetry/${encodeURIComponent(route.id)}` : route.page;
   return `#/${path}${q ? `?${q}` : ""}`;

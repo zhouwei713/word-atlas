@@ -1,13 +1,14 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import type { CardState } from "../store/srs";
-import { filterPoems, isStatus, poemProgress, stateOf, type FilterSource } from "./filter";
+import { filterPoems, isStatus, poemProgress, poemTexts, snippetOf, stateOf, type FilterSource } from "./filter";
 
-const ref = (id: string, title: string, author: string, form: number, themes: number[], lines = 4) => ({ id, title, author, form, level: 0, lines, themes, order: 0 });
+const ref = (id: string, title: string, author: string, form: number, themes: number[], lines = 4, level = 0) => ({ id, title, author, form, level, lines, themes, order: 0 });
 const atlas: FilterSource = {
   forms: ["五言绝句", "七言绝句"],
   themes: ["初中古诗", "思乡", "咏物"],
-  poems: [ref("a", "静夜思", "李白", 0, [0, 1]), ref("b", "咏鹅", "骆宾王", 0, [2]), ref("c", "枫桥夜泊", "张继", 1, [1]), ref("d", "短", "某", 0, [], 1)],
+  levels: ["入门", "初级"],
+  poems: [ref("a", "静夜思", "李白", 0, [0, 1]), ref("b", "咏鹅", "骆宾王", 0, [2]), ref("c", "枫桥夜泊", "张继", 1, [1], 4, 1), ref("d", "短", "某", 0, [], 1)],
 };
 const card = (s: number): CardState => ({ due: 1, s, d: 5, el: 0, sd: 1, ls: 0, reps: 3, lapses: 0, st: 2, seen: 1 });
 const base = { q: "", status: "all" as const };
@@ -55,4 +56,32 @@ test("recognises valid status values only", () => {
   assert.equal(isStatus("learning"), true);
   assert.equal(isStatus("nope"), false);
   assert.equal(isStatus(undefined), false);
+});
+
+test("filters by difficulty level by name", () => {
+  assert.deepEqual(ids({ ...base, level: "初级" }), ["c"]);
+  assert.deepEqual(ids({ ...base, level: "入门", theme: "思乡" }), ["a"]);
+  assert.deepEqual(ids({ ...base, level: "没有" }), []);
+});
+
+test("searches poem text once it is loaded, across the comma between lines", () => {
+  const texts = poemTexts([
+    { id: "a", lines: [{ zh: "床前明月光，" }, { zh: "疑是地上霜。" }] },
+    { id: "c", lines: [{ zh: "月落乌啼霜满天，" }, { zh: "江枫渔火对愁眠。" }] },
+  ]);
+  const search = (q: string, t?: Map<string, string>) => filterPoems(atlas, { ...base, q }, poemProgress({}), [], t).map((p) => p.id);
+  assert.deepEqual(search("明月光"), []);
+  assert.deepEqual(search("明月光", texts), ["a"]);
+  assert.deepEqual(search("霜", texts), ["a", "c"]);
+  assert.deepEqual(search("明月光，疑是", texts), ["a"]);
+  assert.deepEqual(search("光疑", texts), ["a"]);
+  assert.deepEqual(search("李白", texts), ["a"]);
+});
+
+test("a snippet is the matching line, or the couplet when the query spans lines", () => {
+  const lines = [{ zh: "床前明月光，" }, { zh: "疑是地上霜。" }];
+  assert.equal(snippetOf(lines, "地上"), "疑是地上霜。");
+  assert.equal(snippetOf(lines, "光疑"), "床前明月光，疑是地上霜。");
+  assert.equal(snippetOf(lines, "没有"), null);
+  assert.equal(snippetOf(lines, "，"), null);
 });

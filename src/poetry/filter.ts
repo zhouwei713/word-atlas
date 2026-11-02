@@ -50,6 +50,7 @@ export interface ListFilter {
   form?: string;
   stage?: string;
   theme?: string;
+  level?: string;
   status: Status;
 }
 
@@ -57,21 +58,44 @@ export interface FilterSource {
   poems: PoemRef[];
   forms: string[];
   themes: string[];
+  levels: string[];
 }
 
-export function filterPoems(atlas: FilterSource, f: ListFilter, progress: Map<string, PoemProgress>, bookmarks: string[]): PoemRef[] {
+/** Text without punctuation or spaces, so a search can span the comma between two lines. */
+export const squash = (s: string) => s.replace(/[^㐀-鿿A-Za-z0-9]/g, "");
+
+/**
+ * Poems matching every filter. `texts` maps poem id to its full text; without it the search
+ * covers only titles and poets (the index has no poem text until the chunks are loaded).
+ */
+export function filterPoems(atlas: FilterSource, f: ListFilter, progress: Map<string, PoemProgress>, bookmarks: string[], texts?: Map<string, string>): PoemRef[] {
   const q = f.q.trim();
+  const qs = squash(q);
   const form = f.form ? atlas.forms.indexOf(f.form) : -1;
   const stage = f.stage ? atlas.themes.indexOf(f.stage) : -1;
   const theme = f.theme ? atlas.themes.indexOf(f.theme) : -1;
+  const level = f.level ? atlas.levels.indexOf(f.level) : -1;
   const saved = new Set(bookmarks);
   return atlas.poems.filter((p) => {
     if (f.form && p.form !== form) return false;
     if (f.stage && !p.themes.includes(stage)) return false;
     if (f.theme && !p.themes.includes(theme)) return false;
-    if (q && !p.title.includes(q) && !p.author.includes(q)) return false;
+    if (f.level && p.level !== level) return false;
+    if (q && !p.title.includes(q) && !p.author.includes(q) && !(qs && texts?.get(p.id)?.includes(qs))) return false;
     if (f.status === "saved") return saved.has(p.id);
     if (f.status === "all") return true;
     return stateOf(p, progress.get(p.id)) === f.status;
   });
 }
+
+/** The line (or couplet, when the query spans two lines) of a poem that contains the query. */
+export function snippetOf(lines: { zh: string }[], q: string): string | null {
+  const qs = squash(q);
+  if (!qs) return null;
+  for (let i = 0; i < lines.length; i++) if (squash(lines[i].zh).includes(qs)) return lines[i].zh;
+  for (let i = 0; i + 1 < lines.length; i++) if (squash(lines[i].zh + lines[i + 1].zh).includes(qs)) return lines[i].zh + lines[i + 1].zh;
+  return null;
+}
+
+/** Full text of each poem for searching, without punctuation. */
+export const poemTexts = (poems: { id: string; lines: { zh: string }[] }[]) => new Map(poems.map((p) => [p.id, squash(p.lines.map((l) => l.zh).join(""))]));
