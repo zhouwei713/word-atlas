@@ -99,23 +99,28 @@ function Shell({ privateAvailable }: { privateAvailable: boolean }) {
   const theme = useStore((s) => s.settings.theme);
   const [palette, setPalette] = useState(false);
   const [splash, setSplash] = useState(shouldShowSplash);
+  const poetry = route.page === "poetry";
   const focus = route.page === "learn" || (route.page === "poetry" && !!route.learn);
 
   useEffect(() => {
     const on = (e: KeyboardEvent) => {
       const t = e.target as HTMLElement;
       const typing = t.tagName === "INPUT" || t.tagName === "TEXTAREA";
+      // The word palette searches words only; on poetry pages the shortcuts focus the poem search box.
+      const search = () => (poetry ? document.querySelector<HTMLInputElement>(".poem-search input")?.focus() : undefined);
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
         e.preventDefault();
-        setPalette((p) => !p);
+        if (poetry) search();
+        else setPalette((p) => !p);
       } else if (e.key === "/" && !typing && !focus) {
         e.preventDefault();
-        setPalette(true);
+        if (poetry) search();
+        else setPalette(true);
       }
     };
     window.addEventListener("keydown", on);
     return () => window.removeEventListener("keydown", on);
-  }, [focus]);
+  }, [focus, poetry]);
 
   useEffect(() => {
     if (!word) window.scrollTo({ top: 0 });
@@ -138,11 +143,13 @@ function Shell({ privateAvailable }: { privateAvailable: boolean }) {
             ))}
           </nav>
           <div className="topbar-tools">
-            <button className="search-pill" onClick={() => setPalette(true)} aria-label="搜索单词">
-              <Search size={17} />
-              <span>搜索单词</span>
-              <kbd>⌘K</kbd>
-            </button>
+            {!poetry && (
+              <button className="search-pill" onClick={() => setPalette(true)} aria-label="搜索单词">
+                <Search size={17} />
+                <span>搜索单词</span>
+                <kbd>⌘K</kbd>
+              </button>
+            )}
             <AmbiencePicker />
             <button className="icon-btn" onClick={() => store.settings({ theme: dark ? "light" : "dark" })} aria-label={dark ? "切换到浅色" : "切换到深色"}>
               {dark ? <Sun size={19} /> : <Moon size={19} />}

@@ -16,6 +16,17 @@ import type { Poem } from "../poetry/types";
 const STAGES = ["小学古诗", "初中古诗", "高中古诗"];
 const poemHref = (id: string) => `#/poetry/${encodeURIComponent(id)}`;
 
+/** Set the tab title while a page is shown and put the previous one back afterwards. */
+function useDocumentTitle(title: string) {
+  useEffect(() => {
+    const prev = document.title;
+    document.title = title;
+    return () => {
+      document.title = prev;
+    };
+  }, [title]);
+}
+
 /** Poetry section: loads its own index on first visit, then shows the list or one poem. */
 export function Poetry({ id, learn, poem }: { id?: string; learn?: boolean; poem?: string }) {
   const { atlas, error } = usePoetryLoader();
@@ -40,6 +51,7 @@ export function Poetry({ id, learn, poem }: { id?: string; learn?: boolean; poem
 }
 
 function PoemList() {
+  useDocumentTitle("诗词 · 词光 Word Atlas");
   const atlas = usePoetry();
   const cards = usePoetryStore((s) => s.progress.cards);
   const bookmarks = usePoetryStore((s) => s.progress.bookmarks);
@@ -208,6 +220,7 @@ function PoemPage({ id }: { id: string }) {
   const atlas = usePoetry();
   const { poem, error } = usePoem(id);
   const ref = atlas.byId.get(id);
+  useDocumentTitle(ref ? `${ref.title} · ${ref.author} · 词光` : "诗词 · 词光 Word Atlas");
 
   useEffect(() => {
     window.scrollTo({ top: 0 });
