@@ -35,7 +35,8 @@ test("poem status counts only complete couplets", () => {
 });
 
 test("prefs fall back to defaults on bad input", () => {
-  assert.deepEqual(sanitizePrefs(null), { pinyin: true, dailyNew: 2 });
-  assert.deepEqual(sanitizePrefs({ pinyin: false, dailyNew: 1e9 }), { pinyin: false, dailyNew: 2 });
+  assert.deepEqual(sanitizePrefs(null), { pinyin: true, dailyNew: 2, slow: false });
+  assert.deepEqual(sanitizePrefs({ pinyin: false, dailyNew: 1e9, slow: "x" }), { pinyin: false, dailyNew: 2, slow: false });
+  assert.equal(sanitizePrefs({ slow: true }).slow, true);
   assert.equal(sanitizePrefs({ dailyNew: 4.4 }).dailyNew, 4);
 });

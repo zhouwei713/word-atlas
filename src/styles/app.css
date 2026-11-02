@@ -4467,3 +4467,23 @@ a:hover .mark-needle,
   border-bottom: 1px solid var(--line);
   box-shadow: none;
 }
+.poem-tools {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 8px 16px;
+  margin-top: 10px;
+}
+.poem-line {
+  cursor: pointer;
+  border-radius: var(--r-sm);
+}
+.poem-line:hover,
+.poem-line:focus-visible {
+  background: color-mix(in oklab, var(--ochre) 12%, transparent);
+  outline: 0;
+}
+.poem-intro .speak {
+  margin: 8px auto 0;
+}

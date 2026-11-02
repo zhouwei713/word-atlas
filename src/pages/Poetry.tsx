@@ -1,6 +1,9 @@
 import { Bookmark, BookmarkCheck, ChevronLeft, ChevronRight, Search } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { go } from "../lib/router";
+import { PoemSpeak } from "../poetry/PoemSpeak";
+import { readAloud } from "../poetry/speech";
+import { RATE, speechText } from "../poetry/voice";
 import { PoetryContext, usePoem, usePoetry, usePoetryLoader } from "../poetry/context";
 import { PoetryLearn } from "./PoetryLearn";
 import { poemStatus } from "../poetry/couplets";
@@ -275,6 +278,7 @@ function BookmarkButton({ id }: { id: string }) {
 
 function PoemBody({ poem }: { poem: Poem }) {
   const pinyin = usePoetryStore((s) => s.prefs.pinyin);
+  const slow = usePoetryStore((s) => s.prefs.slow);
   const cards = usePoetryStore((s) => s.progress.cards);
   const status = poemStatus(poem, cards);
   const themes = poem.themes.filter((t) => !STAGES.includes(t));
@@ -287,13 +291,19 @@ function PoemBody({ poem }: { poem: Poem }) {
           {stage ? ` · ${stage}` : ""}
         </p>
         <h1 className="display">{poem.title}</h1>
-        <label className="poem-toggle">
-          <input type="checkbox" checked={pinyin} onChange={(e) => poetryStore.prefs({ pinyin: e.target.checked })} /> 显示拼音
-        </label>
+        <div className="poem-tools">
+          <PoemSpeak text={speechText(poem.lines)} label="朗读全诗" />
+          <label className="poem-toggle">
+            <input type="checkbox" checked={pinyin} onChange={(e) => poetryStore.prefs({ pinyin: e.target.checked })} /> 显示拼音
+          </label>
+          <label className="poem-toggle">
+            <input type="checkbox" checked={slow} onChange={(e) => poetryStore.prefs({ slow: e.target.checked })} /> 慢速朗读
+          </label>
+        </div>
       </header>
       <div className={`poem-lines ${pinyin ? "has-py" : ""}`} lang="zh-Hans">
         {poem.lines.map((l, i) => (
-          <p key={i}>
+          <p key={i} className="poem-line" role="button" tabIndex={0} title="点一下朗读这一句" onClick={() => void readAloud(l.zh, slow ? RATE.slow : RATE.normal)} onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), void readAloud(l.zh, slow ? RATE.slow : RATE.normal))}>
             {[...l.zh].map((ch, j) => (
               <span key={j} className={l.py[j] ? "ch" : "ch ch-punct"}>
                 {pinyin && <small aria-hidden>{l.py[j]}</small>}
@@ -309,6 +319,7 @@ function PoemBody({ poem }: { poem: Poem }) {
           <p>{poem.gist}</p>
         </section>
       )}
+      <p className="poem-hint">点一句诗可以单独朗读。朗读用的是你设备自带的语音，音质和读音因系统而异。</p>
       {themes.length > 0 && <p className="poem-tags">{themes.join(" · ")}</p>}
       <p className="poem-status">
         已开始 {status.started} / {status.total} 联 · 已掌握 {status.mastered} 联

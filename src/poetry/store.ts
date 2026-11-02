@@ -15,15 +15,18 @@ export interface PoetryPrefs {
   pinyin: boolean;
   /** New poems per day. */
   dailyNew: number;
+  /** Read aloud at a slower pace. */
+  slow: boolean;
 }
 
-export const defaultPrefs: PoetryPrefs = { pinyin: true, dailyNew: 2 };
+export const defaultPrefs: PoetryPrefs = { pinyin: true, dailyNew: 2, slow: false };
 
 export function sanitizePrefs(v: unknown): PoetryPrefs {
   const out = { ...defaultPrefs };
   if (!v || typeof v !== "object") return out;
   const p = v as Record<string, unknown>;
   if (typeof p.pinyin === "boolean") out.pinyin = p.pinyin;
+  if (typeof p.slow === "boolean") out.slow = p.slow;
   if (typeof p.dailyNew === "number" && Number.isFinite(p.dailyNew) && p.dailyNew >= 0 && p.dailyNew <= 20) out.dailyNew = Math.round(p.dailyNew);
   return out;
 }

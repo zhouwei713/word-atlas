@@ -5,6 +5,8 @@ import { go } from "../lib/router";
 import { cue } from "../lib/sound";
 import { PoetryContext, usePoetry } from "../poetry/context";
 import { couplets, type Couplet } from "../poetry/couplets";
+import { PoemSpeak } from "../poetry/PoemSpeak";
+import { speechText } from "../poetry/voice";
 import { answerOf, gradeFor, hanChars, makePool, parseCoupletId, sessionStats, type Pool, type PoetrySession, type PoetryStep } from "../poetry/quiz";
 import { advance, answer, endSession, startSession } from "../poetry/session";
 import { usePoetryStore } from "../poetry/store";
@@ -127,6 +129,7 @@ function Intro({ poem }: { poem: Poem }) {
         {poem.dynasty} · {poem.author} · {poem.form}
       </p>
       <h2 className="display">{poem.title}</h2>
+      <PoemSpeak text={speechText(poem.lines)} label="朗读全诗" />
       <div className={`poem-lines ${pinyin ? "has-py" : ""}`}>
         {poem.lines.map((l, i) => (
           <Verse key={i} line={l} pinyin={pinyin} />
@@ -276,6 +279,7 @@ function Feedback({ couplet, poem, correct, pinyin, onNext }: { couplet: Couplet
           <p className="feedback-zh">
             {poem.author}《{poem.title}》
           </p>
+          <PoemSpeak text={speechText([couplet.up, couplet.down])} label="朗读这一联" size="sm" />
         </div>
         <button ref={btn} className={`btn btn-xl ${correct ? "btn-sage" : "btn-terra"}`} onClick={onNext}>
           继续 <ArrowRight size={20} />
