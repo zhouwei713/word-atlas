@@ -99,7 +99,7 @@ function Shell({ privateAvailable }: { privateAvailable: boolean }) {
   const theme = useStore((s) => s.settings.theme);
   const [palette, setPalette] = useState(false);
   const [splash, setSplash] = useState(shouldShowSplash);
-  const focus = route.page === "learn";
+  const focus = route.page === "learn" || (route.page === "poetry" && !!route.learn);
 
   useEffect(() => {
     const on = (e: KeyboardEvent) => {
@@ -159,7 +159,7 @@ function Shell({ privateAvailable }: { privateAvailable: boolean }) {
         {route.page === "atlas" && <AtlasPage route={route} />}
         {route.page === "learn" && <Learn />}
         {route.page === "practice" && <Practice />}
-        {route.page === "poetry" && <Poetry id={route.id} />}
+        {route.page === "poetry" && <Poetry id={route.id} learn={route.learn} poem={route.poem} />}
         {route.page === "me" && <Me privateAvailable={privateAvailable} />}
         {route.page === "about" && <About />}
       </main>

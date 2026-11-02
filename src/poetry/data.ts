@@ -60,6 +60,10 @@ export async function loadPoetry(): Promise<PoetryAtlas> {
     poems,
     byId,
     peek: (id) => cache.get(id),
+    async all() {
+      await Promise.all(Array.from({ length: Math.ceil(idx.count / idx.chunk) }, (_, n) => loadChunk(n)));
+      return poems.map((r) => cache.get(r.id)!);
+    },
     async poem(id) {
       const hit = cache.get(id);
       if (hit) return hit;

@@ -4263,3 +4263,207 @@ a:hover .mark-needle,
   color: var(--ink-2);
   line-height: 1.8;
 }
+.poem-plan {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 20px;
+  margin: 20px 0 12px;
+  padding: 16px 20px;
+}
+.poem-plan > div {
+  flex: 1 1 160px;
+}
+.poem-plan-line {
+  margin: 4px 0 0;
+  font-size: 1.1rem;
+}
+.poem-plan-line b {
+  color: var(--ochre);
+}
+.poem-plan-new {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--ink-3);
+  font-size: 0.9rem;
+}
+.poem-plan-new select {
+  height: 36px;
+  padding: 0 10px;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  background: var(--card);
+  color: var(--ink);
+}
+.btn.is-disabled {
+  opacity: 0.45;
+  pointer-events: none;
+}
+.poem-bar-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.verse {
+  margin: 0;
+  font-family: var(--serif);
+  font-size: 1.5rem;
+  line-height: 1.3;
+  text-align: center;
+}
+.verse + .verse {
+  margin-top: 0.7em;
+}
+.verse .ch {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 1.05em;
+  margin: 0 0.04em;
+  vertical-align: bottom;
+}
+.verse.has-py .ch {
+  min-width: 1.6em;
+}
+.verse.has-py .ch-punct {
+  min-width: 0.6em;
+}
+.verse .ch small {
+  min-height: 1.2em;
+  font-family: var(--sans);
+  font-size: 0.5em;
+  line-height: 1.2;
+  color: var(--ink-3);
+  white-space: nowrap;
+}
+.verse .ch-blank > span {
+  min-width: 1em;
+  border-bottom: 2px solid var(--ochre);
+}
+.verse-ask {
+  color: var(--ink-4);
+}
+.poem-source {
+  margin: 0 0 6px;
+  text-align: center;
+  color: var(--ink-3);
+  font-size: 0.9rem;
+}
+.poem-prompt {
+  display: grid;
+  gap: 0.5em;
+  margin: 16px 0 24px;
+}
+.options-lines,
+.options-chars {
+  display: grid;
+  gap: 10px;
+  padding: 0;
+  list-style: none;
+}
+.options-chars {
+  grid-template-columns: repeat(4, 1fr);
+}
+.options-chars .option {
+  justify-content: center;
+  font-family: var(--serif);
+  font-size: 1.6rem;
+}
+.options-lines .option {
+  font-family: var(--serif);
+  font-size: 1.15rem;
+}
+.arrange {
+  display: grid;
+  gap: 16px;
+  justify-items: center;
+}
+.arrange-slots,
+.arrange-tokens {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+.arrange .slot {
+  display: grid;
+  place-items: center;
+  width: 2.4rem;
+  height: 2.8rem;
+  border-bottom: 2px solid var(--line-strong);
+  font-family: var(--serif);
+  font-size: 1.5rem;
+}
+.arrange .slot.is-ok {
+  color: var(--sage-ink);
+}
+.arrange .slot.is-bad {
+  color: var(--terra-ink);
+}
+.arrange-tokens .option {
+  flex: 0 0 auto;
+  width: 3.4rem;
+  height: 3.4rem;
+  padding: 0;
+  justify-content: center;
+  font-family: var(--serif);
+  font-size: 1.5rem;
+}
+.poem-hint {
+  color: var(--ink-3);
+  font-size: 0.9rem;
+}
+.poem-intro {
+  text-align: center;
+}
+.poem-sum-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 16px 0;
+  padding: 0;
+  list-style: none;
+}
+.poem-sum-list li {
+  display: grid;
+  padding: 8px 12px;
+  border-radius: var(--r-sm);
+  background: var(--card-2);
+}
+.poem-sum-list li.is-wrong {
+  box-shadow: inset 0 0 0 1px var(--terra);
+}
+.poem-sum-list small {
+  color: var(--ink-3);
+}
+@media (max-width: 480px) {
+  .verse {
+    font-size: 1.2rem;
+  }
+}
+.feedback-poem .feedback-inner {
+  grid-template-columns: 1fr;
+  text-align: center;
+}
+.feedback-poem .verse {
+  font-size: 1.15rem;
+  white-space: nowrap;
+}
+.feedback-poem .verse + .verse {
+  margin-top: 0.35em;
+}
+.feedback-poem .feedback-verdict {
+  margin-bottom: 6px;
+}
+/* Poem feedback is tall; flow it under the options instead of covering the answer. */
+.feedback.feedback-poem {
+  position: static;
+  margin: 20px 0 0;
+  padding: 0;
+}
+.feedback-poem .feedback-inner {
+  border-radius: var(--r-lg);
+  border-bottom: 1px solid var(--line);
+  box-shadow: none;
+}

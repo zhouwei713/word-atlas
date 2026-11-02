@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from "react";
 import { read, sanitizeProgress, write, type Progress } from "../store/store";
+import type { PoetrySession } from "./quiz";
 
 /**
  * Poetry keeps its own progress next to the word store instead of switching its dataset,
@@ -30,11 +31,14 @@ export function sanitizePrefs(v: unknown): PoetryPrefs {
 interface State {
   progress: Progress;
   prefs: PoetryPrefs;
+  /** The running study session. Kept in memory only: answered cards are already saved in `progress`. */
+  session: PoetrySession | null;
 }
 
 let state: State = {
   progress: sanitizeProgress(read(PROGRESS_KEY), POETRY_ID),
   prefs: sanitizePrefs(read(PREFS_KEY)),
+  session: null,
 };
 const listeners = new Set<() => void>();
 let saveTimer: number | undefined;
@@ -73,6 +77,10 @@ export const poetryStore = {
     state = { ...state, progress: fn(state.progress) };
     emit();
     scheduleSave();
+  },
+  session(fn: (s: PoetrySession | null) => PoetrySession | null) {
+    state = { ...state, session: fn(state.session) };
+    emit();
   },
   prefs(patch: Partial<PoetryPrefs>) {
     state = { ...state, prefs: sanitizePrefs({ ...state.prefs, ...patch }) };

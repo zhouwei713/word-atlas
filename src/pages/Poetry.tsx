@@ -2,8 +2,10 @@ import { Bookmark, BookmarkCheck, ChevronLeft, ChevronRight, Search } from "luci
 import { useEffect, useMemo, useState } from "react";
 import { go } from "../lib/router";
 import { PoetryContext, usePoem, usePoetry, usePoetryLoader } from "../poetry/context";
+import { PoetryLearn } from "./PoetryLearn";
 import { poemStatus } from "../poetry/couplets";
 import { poetryStore, togglePoemBookmark, usePoetryStore } from "../poetry/store";
+import { newToday } from "../poetry/quiz";
 import { isMastered } from "../store/srs";
 import type { Poem } from "../poetry/types";
 
@@ -12,7 +14,7 @@ const STAGES = ["小学古诗", "初中古诗", "高中古诗"];
 const poemHref = (id: string) => `#/poetry/${encodeURIComponent(id)}`;
 
 /** Poetry section: loads its own index on first visit, then shows the list or one poem. */
-export function Poetry({ id }: { id?: string }) {
+export function Poetry({ id, learn, poem }: { id?: string; learn?: boolean; poem?: string }) {
   const { atlas, error } = usePoetryLoader();
   if (error)
     return (
@@ -29,7 +31,9 @@ export function Poetry({ id }: { id?: string }) {
         <span className="spinner" />
       </div>
     );
-  return <PoetryContext.Provider value={atlas}>{id ? <PoemPage id={id} /> : <PoemList />}</PoetryContext.Provider>;
+  return (
+    <PoetryContext.Provider value={atlas}>{learn ? <PoetryLearn poem={poem} /> : id ? <PoemPage id={id} /> : <PoemList />}</PoetryContext.Provider>
+  );
 }
 
 function PoemList() {
@@ -86,6 +90,17 @@ function PoemList() {
 
   const learned = [...progress.values()].filter((v) => v.started > 0).length;
 
+  // Today's plan from the index alone: due cards, plus unseen poems up to the daily limit.
+  const dailyNew = usePoetryStore((s) => s.prefs.dailyNew);
+  const progressAll = usePoetryStore((s) => s.progress);
+  const plan = useMemo(() => {
+    const now = Date.now();
+    const known = new Set(atlas.poems.map((p) => p.id));
+    const due = Object.entries(progressAll.cards).filter(([k, c]) => c.due <= now && known.has(k.slice(0, k.lastIndexOf(":")))).length;
+    const unseen = atlas.poems.filter((p) => !progress.has(p.id)).length;
+    return { due, fresh: Math.min(unseen, Math.max(0, dailyNew - newToday(progressAll))) };
+  }, [atlas, progress, progressAll, dailyNew]);
+
   return (
     <div className="page poetry">
       <header className="page-head">
@@ -95,6 +110,28 @@ function PoemList() {
           {atlas.count} 首唐诗，按由易到难排列，已开始 {learned} 首。内容来自 chinese-poetry，尚未逐首人工审校。
         </p>
       </header>
+
+      <section className="panel poem-plan" aria-label="今日学习">
+        <div>
+          <p className="eyebrow">今日</p>
+          <p className="poem-plan-line">
+            复习 <b>{plan.due}</b> 联 · 新诗 <b>{plan.fresh}</b> 首
+          </p>
+        </div>
+        <label className="poem-plan-new">
+          每天新诗
+          <select value={dailyNew} onChange={(e) => poetryStore.prefs({ dailyNew: Number(e.target.value) })} aria-label="每天新诗数">
+            {[1, 2, 3, 5, 8].map((n) => (
+              <option key={n} value={n}>
+                {n} 首
+              </option>
+            ))}
+          </select>
+        </label>
+        <a className={`btn btn-primary ${plan.due + plan.fresh === 0 ? "is-disabled" : ""}`} href="#/poetry/learn" aria-disabled={plan.due + plan.fresh === 0}>
+          开始学习
+        </a>
+      </section>
 
       <div className="poem-filters">
         <label className="search poem-search">
@@ -204,7 +241,12 @@ function PoemPage({ id }: { id: string }) {
         <a className="btn btn-ghost" href="#/poetry">
           <ChevronLeft size={18} /> 全部诗词
         </a>
-        <BookmarkButton id={id} />
+        <span className="poem-bar-actions">
+          <a className="btn btn-primary" href={`#/poetry/learn?p=${encodeURIComponent(id)}`}>
+            学这首
+          </a>
+          <BookmarkButton id={id} />
+        </span>
       </div>
       {poem ? <PoemBody poem={poem} /> : error ? <p>{error}</p> : <span className="spinner" />}
       <nav className="poem-nav" aria-label="切换诗词">

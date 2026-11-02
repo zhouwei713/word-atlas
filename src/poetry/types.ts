@@ -45,4 +45,6 @@ export interface PoetryAtlas {
   /** Loads a full poem; chunked like the word atlas. */
   poem: (id: string) => Promise<Poem>;
   peek: (id: string) => Poem | undefined;
+  /** Every poem in learning-path order; sessions need the whole set for plausible wrong answers. */
+  all: () => Promise<Poem[]>;
 }
