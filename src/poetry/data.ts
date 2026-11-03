@@ -27,6 +27,7 @@ export async function loadPoetry(): Promise<PoetryAtlas> {
     lines: r[5],
     themes: r[6],
     first: r[7] ?? "",
+    scene: r[8] ?? "day none",
     order,
   }));
   const byId = new Map(poems.map((p) => [p.id, p]));

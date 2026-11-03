@@ -1,5 +1,5 @@
-/** Compact row from poetry/index.json: [id, title, author, form, level, lines, themes, first line]. */
-export type PoemRow = [string, string, string, number, number, number, number[], string];
+/** Compact row from poetry/index.json: [id, title, author, form, level, lines, themes, first line, scene]. */
+export type PoemRow = [string, string, string, number, number, number, number[], string, string];
 
 export interface PoemLine {
   zh: string;
@@ -31,6 +31,8 @@ export interface PoemRef {
   themes: number[];
   /** Opening line without its closing punctuation, for lists. */
   first: string;
+  /** `<time> <season> <motif>...` for the picture, see scripts/poetry/build_poetry.py. */
+  scene: string;
   /** Position in the learning path. */
   order: number;
 }

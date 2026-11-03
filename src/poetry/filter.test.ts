@@ -3,7 +3,7 @@ import { test } from "node:test";
 import type { CardState } from "../store/srs";
 import { filterPoems, isStatus, poemProgress, poemTexts, snippetOf, stateOf, type FilterSource } from "./filter";
 
-const ref = (id: string, title: string, author: string, form: number, themes: number[], lines = 4, level = 0) => ({ id, title, author, form, level, lines, themes, first: "", order: 0 });
+const ref = (id: string, title: string, author: string, form: number, themes: number[], lines = 4, level = 0) => ({ id, title, author, form, level, lines, themes, first: "", scene: "day none", order: 0 });
 const atlas: FilterSource = {
   forms: ["五言绝句", "七言绝句"],
   themes: ["初中古诗", "思乡", "咏物"],

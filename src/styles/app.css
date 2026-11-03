@@ -4137,9 +4137,8 @@ a:hover .mark-needle,
 .poem-item {
   position: relative;
   display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 16px;
+  flex-direction: column;
+  overflow: hidden;
   border-radius: var(--r);
   background: var(--card);
   box-shadow: var(--shadow-sm);
@@ -4149,9 +4148,22 @@ a:hover .mark-needle,
 .poem-item:hover {
   background: var(--card-2);
 }
+.poem-item-body {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+}
 .poem-rows .poem-item {
-  padding: 10px 16px;
   border-radius: var(--r-sm);
+}
+.poem-rows .poem-item-body {
+  padding: 10px 16px;
+}
+.poem-art {
+  display: block;
+  width: 100%;
+  aspect-ratio: 2 / 1;
 }
 .poem-item-side {
   flex: none;

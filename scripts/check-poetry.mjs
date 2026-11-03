@@ -15,7 +15,7 @@ const HAN = /[㐀-鿿]/;
 if (index.poems.length !== index.count) fail(`count ${index.count} != rows ${index.poems.length}`);
 const ids = new Set();
 index.poems.forEach((r, i) => {
-  const [id, title, author, form, level, lines, themes, first] = r;
+  const [id, title, author, form, level, lines, themes, first, scene] = r;
   if (!/^[a-z0-9-]{1,64}$/.test(id) || ids.has(id)) fail(`bad or duplicate id at ${i}: ${id}`);
   ids.add(id);
   if (!title || !author) fail(`empty title or author: ${id}`);
@@ -24,6 +24,7 @@ index.poems.forEach((r, i) => {
   if (!(lines >= 2)) fail(`too few lines: ${id}`);
   if (!Array.isArray(themes) || themes.some((t) => !(t >= 0 && t < index.themes.length))) fail(`bad themes: ${id}`);
   if (typeof first !== "string" || !first) fail(`no first line: ${id}`);
+  if (typeof scene !== "string" || !/^(day|dusk|night) (spring|summer|autumn|winter|none)/.test(scene)) fail(`bad scene: ${id}`);
 });
 
 let poems = 0;

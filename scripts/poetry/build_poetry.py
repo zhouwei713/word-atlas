@@ -26,6 +26,51 @@ LEVELS = ["入门", "初级", "中级", "进阶"]
 HAN = re.compile(r"[㐀-鿿]")
 SENTENCE = re.compile(r"[^，。？！；]+[，。？！；]?")
 
+# Imagery for the poem's picture: character -> motif, found by scanning the title and the text.
+MOTIFS = {
+    "moon": "月",
+    "sun": "日阳晖",
+    "star": "星",
+    "mountain": "山峰岭岳嶂",
+    "water": "江河水溪湖海泉瀑波潮流",
+    "boat": "舟船帆桡棹",
+    "willow": "柳",
+    "tree": "松柏树林桐桑",
+    "blossom": "花梅桃杏荷莲菊兰芙蓉",
+    "bird": "鸟雁鸦鹤鸥莺燕鹭鹊",
+    "rain": "雨",
+    "snow": "雪",
+    "cloud": "云",
+    "tower": "楼阁台亭殿宫",
+    "grass": "草芳",
+    "bamboo": "竹",
+    "smoke": "烟",
+    "bridge": "桥",
+    "horse": "马",
+}
+NIGHT = "夜月星灯更宵"
+DUSK = "暮夕晚昏斜"
+SEASONS = {"spring": "春桃杏柳莺", "summer": "夏荷蝉", "autumn": "秋霜雁枫菊", "winter": "冬雪寒梅"}
+
+
+def scene_of(title, lines):
+    """'<time> <season> <motif>...' where time is day|dusk|night and season may be 'none'."""
+    text = title + "".join(l["zh"] for l in lines)
+    count = lambda chars: sum(text.count(c) for c in chars)
+    time = "night" if count(NIGHT) else "dusk" if count(DUSK) else "day"
+    seasons = {k: count(v) for k, v in SEASONS.items()}
+    season = max(seasons, key=seasons.get) if any(seasons.values()) else "none"
+    if "雪" in text:
+        season = "winter"
+    motifs = [k for k, v in MOTIFS.items() if any(c in text for c in v)]
+    # The sun and moon share the sky; the moon wins at night, the sun otherwise.
+    if time == "night" and "sun" in motifs and "月" in text:
+        motifs.remove("sun")
+    if time != "night" and "moon" in motifs and "日" in text:
+        motifs.remove("moon")
+    return " ".join([time, season, *motifs])
+
+
 # Readings that general-purpose pinyin tools get wrong in classical poems.
 # (line fragment, character, reading): applied to the first character in the fragment equal to `character`.
 # Keep this list to readings that textbooks agree on; the review report lists the rest.
@@ -158,7 +203,7 @@ def main():
         "levels": LEVELS,
         "themes": theme_list,
         "poems": [
-            [p["id"], p["title"], p["author"], FORMS.index(p["form"]), p["level"], len(p["lines"]), [theme_list.index(t) for t in p["themes"]], p["lines"][0]["zh"].rstrip("，。？！；")]
+            [p["id"], p["title"], p["author"], FORMS.index(p["form"]), p["level"], len(p["lines"]), [theme_list.index(t) for t in p["themes"]], p["lines"][0]["zh"].rstrip("，。？！；"), scene_of(p["title"], p["lines"])]
             for p in poems
         ],
     }

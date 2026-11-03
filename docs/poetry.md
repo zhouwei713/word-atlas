@@ -23,7 +23,7 @@
 
 ### 网页数据 `public/poetry/`
 
-- `index.json`：紧凑索引。`poems` 中每行为 `[id, title, author, formIndex, level, lineCount, themeIndexes, firstLine]`，`firstLine` 是首句去掉句末标点，供列表显示，`forms`、`levels`、`themes` 是对应的名称表，`chunk` 是每块的诗数（50）。
+- `index.json`：紧凑索引。`poems` 中每行为 `[id, title, author, formIndex, level, lineCount, themeIndexes, firstLine, scene]`，`firstLine` 是首句去掉句末标点，供列表显示，`forms`、`levels`、`themes` 是对应的名称表，`chunk` 是每块的诗数（50）。
 - `poems/<n>.json`：完整诗词，第 `n` 块对应索引中第 `n*50` 到 `n*50+49` 行。
 
 ## 重新生成
@@ -68,6 +68,8 @@ npm run check:poetry
 | 学段 | 小学古诗、初中古诗、高中古诗（只有出现在《唐诗三百首》标签里的诗才有） |
 | 题材 | 至少有 2 首诗的题材 |
 | 难度 | 入门、初级、中级、进阶（由体裁决定，见「词库格式」的 `level`） |
+
+网格视图的卡片顶部有一幅程序绘制的小画（`src/poetry/PoemArt.tsx`）。构建脚本扫描题目和诗文里的字，得到时间（白天、黄昏、夜晚）、季节和意象（月、山、水、舟、柳、雁、雪等），写进索引的 `scene` 字段；画面按诗的 id 固定生成，所以同一首诗每次看到的画都一样。没有对应意象的诗只画山丘和草。
 
 卡片上显示题目、首句（搜索命中诗句时换成命中的那一句）和「诗人 · 体裁 · 难度」。开始学的诗右侧有一个进度环：浅色弧是已经问过的联，实色弧是已掌握的联，全部掌握后整圈变绿；没学过的诗不画环。
 

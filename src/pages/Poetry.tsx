@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { go, type Route } from "../lib/router";
 import { PoemSpeak } from "../poetry/PoemSpeak";
 import { PoetryGalaxy } from "../poetry/PoetryGalaxy";
+import { PoemArt } from "../poetry/PoemArt";
 import { ProgressRing } from "../poetry/ProgressRing";
 import { readAloud } from "../poetry/speech";
 import { RATE, speechText } from "../poetry/voice";
@@ -256,6 +257,8 @@ function PoemList({ route }: { route: Extract<Route, { page: "poetry" }> }) {
                 return (
                   <li key={p.id}>
                     <a href={poemHref(p.id)} className={`poem-item is-${state}`} title={p.title}>
+                      {view === "grid" && <PoemArt id={p.id} scene={p.scene} />}
+                      <span className="poem-item-body">
                       <span className="poem-item-main">
                         <b>{p.title}</b>
                         {textHit ? <Snippet id={p.id} q={q} /> : view === "grid" && p.first && <em className="poem-first">{p.first}</em>}
@@ -267,6 +270,7 @@ function PoemList({ route }: { route: Extract<Route, { page: "poetry" }> }) {
                         <ProgressRing started={v?.started ?? 0} mastered={v?.mastered ?? 0} total={total} />
                         <small>{label}</small>
                         {mark}
+                      </span>
                       </span>
                     </a>
                   </li>
