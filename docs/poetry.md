@@ -146,3 +146,7 @@ npm run check:poetry
 - 没有注释和插画，也没有预先录好的朗读音频。
 - 106 首诗没有题材标签，因为它们不在《唐诗三百首》里。
 - 目前只有唐诗，宋词、诗经等还没有加入。
+
+## 待办
+
+- 卡片配图：`src/poetry/PoemArt.tsx` 已能按索引里的 `scene` 画出小山水，数据也已生成，但暂时没有挂到图鉴卡片上。要启用时，在 `src/pages/Poetry.tsx` 的网格卡片里加回 `<PoemArt id={p.id} scene={p.scene} />`，并把 `.poem-item` 改成纵向布局（`.poem-item-body` 里放文字和进度环）。后面也可以给少数名篇换成 AI 生成的图。
