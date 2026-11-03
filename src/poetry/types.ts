@@ -1,5 +1,5 @@
-/** Compact row from poetry/index.json: [id, title, author, form, level, lines, themes]. */
-export type PoemRow = [string, string, string, number, number, number, number[]];
+/** Compact row from poetry/index.json: [id, title, author, form, level, lines, themes, first line]. */
+export type PoemRow = [string, string, string, number, number, number, number[], string];
 
 export interface PoemLine {
   zh: string;
@@ -29,6 +29,8 @@ export interface PoemRef {
   level: number;
   lines: number;
   themes: number[];
+  /** Opening line without its closing punctuation, for lists. */
+  first: string;
   /** Position in the learning path. */
   order: number;
 }

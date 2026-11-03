@@ -4153,8 +4153,24 @@ a:hover .mark-needle,
   padding: 10px 16px;
   border-radius: var(--r-sm);
 }
-.poem-item .ring {
+.poem-item-side {
   flex: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.poem-ring-track {
+  stroke: var(--line-strong);
+}
+.poem-ring-started {
+  stroke: color-mix(in oklab, var(--ochre) 30%, transparent);
+}
+.poem-ring-mastered {
+  stroke: var(--ochre);
+}
+.poem-ring.is-done .poem-ring-started,
+.poem-ring.is-done .poem-ring-mastered {
+  stroke: var(--sage);
 }
 .poem-item-main {
   flex: 1;
@@ -4162,18 +4178,31 @@ a:hover .mark-needle,
   display: grid;
   gap: 2px;
 }
+.poem-item b,
+.poem-meta,
+.poem-first {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .poem-item b {
   font-family: var(--serif);
   font-size: 1.05rem;
 }
-.poem-item-main > span {
-  color: var(--ink-3);
-  font-size: 0.85rem;
+.poem-first {
+  font-family: var(--serif);
+  font-style: normal;
+  font-size: 0.92rem;
+  color: var(--ink-2);
 }
-.poem-item small {
-  flex: none;
+.poem-meta {
   color: var(--ink-3);
   font-size: 0.8rem;
+}
+.poem-item small {
+  color: var(--ink-3);
+  font-size: 0.8rem;
+  white-space: nowrap;
 }
 .poem-item.is-learning small {
   color: var(--ochre);

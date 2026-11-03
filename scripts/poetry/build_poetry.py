@@ -158,7 +158,7 @@ def main():
         "levels": LEVELS,
         "themes": theme_list,
         "poems": [
-            [p["id"], p["title"], p["author"], FORMS.index(p["form"]), p["level"], len(p["lines"]), [theme_list.index(t) for t in p["themes"]]]
+            [p["id"], p["title"], p["author"], FORMS.index(p["form"]), p["level"], len(p["lines"]), [theme_list.index(t) for t in p["themes"]], p["lines"][0]["zh"].rstrip("，。？！；")]
             for p in poems
         ],
     }

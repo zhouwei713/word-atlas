@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { go, type Route } from "../lib/router";
 import { PoemSpeak } from "../poetry/PoemSpeak";
 import { PoetryGalaxy } from "../poetry/PoetryGalaxy";
+import { ProgressRing } from "../poetry/ProgressRing";
 import { readAloud } from "../poetry/speech";
 import { RATE, speechText } from "../poetry/voice";
 import { PoetryContext, usePoem, usePoetry, usePoetryLoader } from "../poetry/context";
@@ -11,7 +12,6 @@ import { poemStatus } from "../poetry/couplets";
 import { coupletCount, filterPoems, isStatus, poemProgress, poemTexts, snippetOf, stateOf, STAGES, STATUS, type Status } from "../poetry/filter";
 import { poetryStore, togglePoemBookmark, usePoetryStore } from "../poetry/store";
 import { newToday } from "../poetry/quiz";
-import { Ring } from "../ui/Ring";
 import type { Poem } from "../poetry/types";
 
 type View = "grid" | "list" | "galaxy";
@@ -249,21 +249,25 @@ function PoemList({ route }: { route: Extract<Route, { page: "poetry" }> }) {
                 const total = coupletCount(p);
                 const v = progress.get(p.id);
                 const state = stateOf(p, v);
-                const label = state === "mastered" ? "已掌握" : state === "learning" ? `掌握 ${v?.mastered ?? 0}/${total} 联` : "未学";
+                const label = state === "mastered" ? "已掌握" : state === "learning" ? `已学 ${v?.started ?? 0}/${total} 联` : "未学";
+                // A search that matched the poem's text shows the matching line instead of the opening one.
+                const textHit = searching && !p.title.includes(q.trim()) && !p.author.includes(q.trim());
                 const mark = bookmarks.includes(p.id) && <BookmarkCheck className="poem-mark" size={16} aria-label="已收藏" />;
                 return (
                   <li key={p.id}>
-                    <a href={poemHref(p.id)} className={`poem-item is-${state}`}>
-                      {view === "grid" && <Ring value={total ? (v?.mastered ?? 0) / total : 0} size={40} stroke={4} tone={state === "mastered" ? "sage" : "ochre"} />}
+                    <a href={poemHref(p.id)} className={`poem-item is-${state}`} title={p.title}>
                       <span className="poem-item-main">
                         <b>{p.title}</b>
-                        <span>
+                        {textHit ? <Snippet id={p.id} q={q} /> : view === "grid" && p.first && <em className="poem-first">{p.first}</em>}
+                        <span className="poem-meta">
                           {p.author} · {atlas.forms[p.form]} · {atlas.levels[p.level]}
                         </span>
-                        {searching && !p.title.includes(q.trim()) && !p.author.includes(q.trim()) && <Snippet id={p.id} q={q} />}
                       </span>
-                      <small>{label}</small>
-                      {mark}
+                      <span className="poem-item-side">
+                        <ProgressRing started={v?.started ?? 0} mastered={v?.mastered ?? 0} total={total} />
+                        <small>{label}</small>
+                        {mark}
+                      </span>
                     </a>
                   </li>
                 );

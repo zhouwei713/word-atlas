@@ -3,7 +3,7 @@ import { test } from "node:test";
 import { layoutPoems } from "./galaxy";
 import type { PoemRef } from "./types";
 
-const ref = (id: string, form: number, level: number): PoemRef => ({ id, title: id, author: "a", form, level, lines: 4, themes: [], order: 0 });
+const ref = (id: string, form: number, level: number): PoemRef => ({ id, title: id, author: "a", form, level, lines: 4, themes: [], first: "", order: 0 });
 const poems = [...Array.from({ length: 30 }, (_, i) => ref(`e${i}`, 0, 0)), ...Array.from({ length: 30 }, (_, i) => ref(`h${i}`, 3, 3)), ref("m1", 5, 1)];
 const atlas = { poems, forms: ["五言绝句", "七言绝句", "五言律诗", "七言律诗", "五言古诗", "七言古诗"], levels: ["入门", "初级", "中级", "进阶"] };
 const radius = (l: ReturnType<typeof layoutPoems>, i: number) => Math.hypot(l.positions[i * 3], l.positions[i * 3 + 2]);
